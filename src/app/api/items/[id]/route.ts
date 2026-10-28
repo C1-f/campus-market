@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const { data: item, error } = await supabase
       .from('items')
-      .select('*, seller:profiles(id, email, nickname, created_at)')
+      .select('*, seller:profiles!items_seller_id_fkey(id, email, nickname, created_at)')
       .eq('id', params.id)
       .single();
 

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     // 核心：只展示"在售 + 未到期"的商品（闲置到期自动下架）
     let query = supabase
       .from('items')
-      .select('*, seller:profiles(id, email, nickname, created_at)', { count: 'exact' })
+      .select('*, seller:profiles!items_seller_id_fkey(id, email, nickname, created_at)', { count: 'exact' })
       .eq('status', 'available')
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });
