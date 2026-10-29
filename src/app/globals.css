@@ -92,11 +92,12 @@ input, select, textarea {
   background: var(--bg);
   color: var(--text);
 }
-.navbar-links .highlight {
+/* 当前页导航入口高亮 */
+.navbar-links a.active {
   background: var(--primary);
   color: #fff;
 }
-.navbar-links .highlight:hover {
+.navbar-links a.active:hover {
   background: var(--primary-dark);
   color: #fff;
 }
