@@ -866,3 +866,22 @@ input, select, textarea {
   gap: 6px;
   flex-wrap: wrap;
 }
+
+/* 管理后台：商品搜索栏 */
+.admin-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.admin-search input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  outline: none;
+  font-size: 13px;
+}
+.admin-search input:focus {
+  border-color: var(--primary);
+}

@@ -63,6 +63,8 @@ export default function AdminPanel({
   const [apps, setApps] = useState<AdminApplication[]>([]);
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [itemQuery, setItemQuery] = useState('');
+  const [appliedQuery, setAppliedQuery] = useState('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -79,7 +81,9 @@ export default function AdminPanel({
           if (!r.ok) throw new Error(j.error);
           setStats(j);
         } else if (target === 'items') {
-          const r = await fetch(`/api/admin/items?status=${statusFilter}`);
+          const r = await fetch(
+            `/api/admin/items?status=${statusFilter}&q=${encodeURIComponent(appliedQuery)}`
+          );
           const j = await r.json();
           if (!r.ok) throw new Error(j.error);
           setItems(j.items ?? []);
@@ -106,7 +110,7 @@ export default function AdminPanel({
         setLoading(false);
       }
     },
-    [statusFilter]
+    [statusFilter, appliedQuery]
   );
 
   useEffect(() => {
@@ -216,6 +220,34 @@ export default function AdminPanel({
 
       {tab === 'items' && (
         <>
+          <div className="admin-search">
+            <input
+              type="text"
+              placeholder="搜索：商品名称 / 分类 / 价格 / 卖家昵称或邮箱"
+              value={itemQuery}
+              onChange={(e) => setItemQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') setAppliedQuery(itemQuery.trim());
+              }}
+            />
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setAppliedQuery(itemQuery.trim())}
+            >
+              搜索
+            </button>
+            {appliedQuery && (
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => {
+                  setItemQuery('');
+                  setAppliedQuery('');
+                }}
+              >
+                重置
+              </button>
+            )}
+          </div>
           <div className="filter-bar">
             {['all', 'available', 'reserved', 'sold', 'expired'].map((s) => (
               <button
@@ -243,7 +275,7 @@ export default function AdminPanel({
                 {items.length === 0 && (
                   <tr>
                     <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 24 }}>
-                      暂无商品
+                      {appliedQuery ? `没有找到匹配「${appliedQuery}」的商品` : '暂无商品'}
                     </td>
                   </tr>
                 )}
