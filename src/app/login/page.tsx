@@ -7,6 +7,7 @@ import Link from 'next/link';
 function LoginForm() {
   const params = useSearchParams();
   const next = params.get('next') || '/';
+  const kicked = params.get('kicked') === '1';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,6 +41,11 @@ function LoginForm() {
     <div className="form-page">
       <div className="card">
         <h1>登录校园二手集市</h1>
+        {kicked && (
+          <p style={{ fontSize: 13, color: 'var(--red)', marginBottom: 12 }}>
+            该账号已在其他设备登录，本机已被自动退出。如需在本机使用，请先在原设备退出登录。
+          </p>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="email">学校邮箱</label>

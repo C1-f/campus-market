@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
     let query = db
       .from('profiles')
-      .select('id, email, nickname, role, is_banned, created_at')
+      .select('id, email, nickname, role, is_banned, created_at, session_id, session_last_seen')
       .order('created_at', { ascending: false })
       .limit(100);
 

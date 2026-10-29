@@ -144,7 +144,10 @@ export default function AdminPanel({
     await act(`/api/admin/items/${id}`, { action, reason: note });
   }
 
-  async function userAction(id: string, action: 'ban' | 'unban' | 'promote' | 'demote') {
+  async function userAction(
+    id: string,
+    action: 'ban' | 'unban' | 'promote' | 'demote' | 'force_offline'
+  ) {
     const note = window.prompt('操作原因（将记入操作日志，可留空）', '') ?? '';
     await act(`/api/admin/users/${id}`, { action, reason: note });
   }
@@ -363,6 +366,14 @@ export default function AdminPanel({
                       {isSuper && u.role === 'admin' && (
                         <button className="btn btn-danger btn-sm" onClick={() => userAction(u.id, 'demote')}>
                           撤销管理员
+                        </button>
+                      )}
+                      {u.session_id && (
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() => userAction(u.id, 'force_offline')}
+                        >
+                          强制下线
                         </button>
                       )}
                     </div>

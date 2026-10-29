@@ -98,6 +98,33 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ ok: true });
     }
 
+    if (action === 'force_offline') {
+      // 强制下线：清空该用户的在线会话占位，其设备下次请求会被踢出
+      const admin = await requireAdmin();
+
+      const { data: target } = await db
+        .from('profiles')
+        .select('id, role')
+        .eq('id', targetId)
+        .single();
+
+      if (!target) {
+        return NextResponse.json({ error: '用户不存在' }, { status: 404 });
+      }
+      if (target.role === 'super_admin') {
+        return NextResponse.json({ error: '超级管理员不可被强制下线' }, { status: 403 });
+      }
+
+      const { error } = await db
+        .from('profiles')
+        .update({ session_id: null, session_last_seen: null })
+        .eq('id', targetId);
+      if (error) throw error;
+
+      await logAdminAction(admin.id, 'force_offline', 'user', targetId, reason);
+      return NextResponse.json({ ok: true });
+    }
+
     return NextResponse.json({ error: '未知操作' }, { status: 400 });
   } catch (e) {
     if (e instanceof AuthError) {

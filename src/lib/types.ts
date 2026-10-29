@@ -14,6 +14,9 @@ export interface Profile {
   role?: UserRole;
   is_banned?: boolean;
   created_at: string;
+  // 单设备登录：当前在线会话标识（服务端专用，前端仅用于展示在线状态）
+  session_id?: string | null;
+  session_last_seen?: string | null;
 }
 
 export interface Item {
