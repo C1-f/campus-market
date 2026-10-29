@@ -1,40 +1,30 @@
 -- ============================================================
--- 修复内置超级管理员账号（supabase/migrate-admin.sql 第 7 节）
--- 问题：直接用 SQL 往 auth.users 插用户时漏了 auth.identities
---       身份记录，导致该账号无法登录、注册同邮箱时报
---       "Database error checking email"
--- 执行后可正常登录：superadmin@example.com / Admin@123456
+-- 修复内置超级管理员账号
+-- 背景：migrate-admin.sql 旧版第 7 节用 SQL 直插 auth.users，
+--       产生的账号缺少 GoTrue 完整内部状态，无法登录且会导致
+--       管理 API 报错（Database error loading/finding users）。
+-- 正确做法：先删除残缺账号（本脚本），再通过网站注册流程
+--       或 Supabase 管理 API 重新创建——注册接口会自动识别
+--       SUPER_ADMIN_EMAIL 环境变量并赋予超管身份。
 -- ============================================================
 
--- 1. 补齐 auth.identities 身份记录（email 登录方式）
-insert into auth.identities (
-  id, user_id, provider_id, identity_data,
-  provider, last_sign_in_at, created_at, updated_at
-)
-select
-  gen_random_uuid(),
-  u.id,
-  u.id::text,
-  jsonb_build_object('sub', u.id::text, 'email', u.email),
-  'email',
-  now(), now(), now()
-from auth.users u
-where lower(u.email) = 'superadmin@example.com'
-  and not exists (
-    select 1 from auth.identities i
-    where i.user_id = u.id and i.provider = 'email'
-  );
+-- 1. 删除残缺的身份记录
+delete from auth.identities
+where user_id in (
+  select id from auth.users where lower(email) = 'superadmin@example.com'
+);
 
--- 2. 兜底：确保 profile 存在且角色为超级管理员
-insert into public.profiles (id, email, nickname, role)
-select u.id, u.email, '超级管理员', 'super_admin'
-from auth.users u
-where lower(u.email) = 'superadmin@example.com'
-on conflict (id) do update set role = 'super_admin', is_banned = false;
+-- 2. 删除残缺的 auth 账号（profiles 行会级联删除）
+delete from auth.users
+where lower(email) = 'superadmin@example.com';
 
--- 3. 验证：应返回 1 行，identity_count = 1
-select u.email,
-       (select count(*) from auth.identities i where i.user_id = u.id) as identity_count,
-       (select role from public.profiles p where p.id = u.id) as role
-from auth.users u
-where lower(u.email) = 'superadmin@example.com';
+-- 3. 验证：应返回 0 行
+select count(*) as remaining from auth.users
+where lower(email) = 'superadmin@example.com';
+
+-- 4. 重建方式（任选其一）：
+--    a) 网站注册页用 superadmin@example.com 正常注册
+--       （注册接口会按 SUPER_ADMIN_EMAIL 自动提权为超管）
+--    b) 或由部署方调用 Supabase Admin API 创建后执行：
+--       update public.profiles set role = 'super_admin'
+--       where lower(email) = 'superadmin@example.com';

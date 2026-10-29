@@ -130,52 +130,10 @@ drop policy if exists "items_delete" on public.items;
 create policy "items_delete" on public.items
   for delete using (auth.uid() = seller_id or public.is_admin());
 
--- 7. 内置超级管理员账号
---    邮箱/密码请按需要修改后执行；执行后该账号登录即可进入管理后台
-do $$
-declare
-  admin_email text := 'superadmin@example.com';
-  admin_pass  text := 'Admin@123456';
-  new_id      uuid;
-begin
-  if not exists (select 1 from auth.users where lower(email) = admin_email) then
-    new_id := gen_random_uuid();
-    insert into auth.users (
-      id, instance_id, aud, role, email,
-      encrypted_password, email_confirmed_at,
-      raw_app_meta_data, raw_user_meta_data,
-      is_super_admin, created_at, updated_at,
-      confirmation_token, recovery_token, email_change_token_new
-    ) values (
-      new_id,
-      '00000000-0000-0000-0000-000000000000',
-      'authenticated', 'authenticated', admin_email,
-      extensions.crypt(admin_pass, extensions.gen_salt('bf')),
-      now(),
-      '{"provider":"email","providers":["email"]}'::jsonb,
-      '{"nickname":"超级管理员"}'::jsonb,
-      false, now(), now(),
-      '', '', ''
-    );
-  else
-    select id into new_id from auth.users where lower(email) = admin_email;
-  end if;
-
-  -- 补齐 auth.identities 身份记录（没有它无法登录）
-  if not exists (
-    select 1 from auth.identities where user_id = new_id and provider = 'email'
-  ) then
-    insert into auth.identities (
-      id, user_id, provider_id, identity_data,
-      provider, last_sign_in_at, created_at, updated_at
-    ) values (
-      gen_random_uuid(), new_id, new_id::text,
-      jsonb_build_object('sub', new_id::text, 'email', admin_email),
-      'email', now(), now(), now()
-    );
-  end if;
-
-  update public.profiles
-     set role = 'super_admin', is_banned = false
-   where lower(email) = admin_email;
-end $$;
+-- 7. 超级管理员引导说明
+--    不要用 SQL 直插 auth.users（会产生无法登录的残缺账号）。
+--    正确方式：部署方在环境变量中设置 SUPER_ADMIN_EMAIL=<邮箱>，
+--    然后用该邮箱走网站正常注册流程，注册接口会自动赋予超管身份。
+--    若账号已存在（普通注册过），执行：
+--      update public.profiles set role = 'super_admin'
+--      where lower(email) = '<邮箱>';
