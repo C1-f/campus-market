@@ -10,13 +10,16 @@ export default async function Navbar() {
   } = await supabase.auth.getUser();
 
   let nickname = '';
+  let isAdmin = false;
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('nickname')
+      .select('nickname, role')
       .eq('id', user.id)
       .single();
     nickname = profile?.nickname ?? '';
+    const role = profile?.role ?? 'user';
+    isAdmin = role === 'admin' || role === 'super_admin';
   }
 
   return (
@@ -35,6 +38,11 @@ export default async function Navbar() {
               <Link href="/profile" className="navbar-user" title={nickname}>
                 {nickname || '个人中心'}
               </Link>
+              {isAdmin && (
+                <Link href="/admin" className="navbar-user">
+                  管理后台
+                </Link>
+              )}
               <LogoutButton />
             </>
           ) : (

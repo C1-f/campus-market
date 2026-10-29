@@ -30,6 +30,26 @@ export const ITEM_STATUS_LABELS: Record<string, string> = {
   expired: '已下架',
 };
 
+// 用户角色
+export const ROLE_LABELS: Record<string, string> = {
+  user: '普通用户',
+  admin: '管理员',
+  super_admin: '超级管理员',
+};
+
+// 管理操作类型（写入日志表）
+export const ADMIN_ACTIONS: Record<string, string> = {
+  takedown_item: '下架商品',
+  restore_item: '恢复上架',
+  delete_item: '删除商品',
+  ban_user: '封禁用户',
+  unban_user: '解封用户',
+  promote_admin: '授予管理员',
+  demote_admin: '撤销管理员',
+  approve_application: '通过管理员申请',
+  reject_application: '拒绝管理员申请',
+};
+
 // 允许注册的学校邮箱后缀（服务端 API 会强制校验，前端只是体验优化）
 export function getAllowedDomains(): string[] {
   return (process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS || '')

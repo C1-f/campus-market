@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSchoolEmail } from '@/lib/constants';
+import { ensureSuperAdmin } from '@/lib/auth';
 
 // 注册：服务端强制校验学校邮箱后缀（校园准入控制的核心）
 export async function POST(req: NextRequest) {
@@ -47,6 +48,9 @@ export async function POST(req: NextRequest) {
     await admin
       .from('profiles')
       .upsert({ id: data.user!.id, email: email.toLowerCase().trim(), nickname: nick });
+
+    // 若注册邮箱 = SUPER_ADMIN_EMAIL，自动赋予超级管理员身份
+    await ensureSuperAdmin(data.user!.id, email);
 
     return NextResponse.json({ ok: true });
   } catch (e) {

@@ -29,7 +29,8 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 未登录访问受保护页面 -> 去登录页
-  const protectedPaths = ['/publish', '/profile'];
+  // /admin 的更细粒度角色校验在页面内部（需要查 role 字段），此处只拦未登录
+  const protectedPaths = ['/publish', '/profile', '/admin'];
   const isProtected = protectedPaths.some((p) =>
     request.nextUrl.pathname.startsWith(p)
   );

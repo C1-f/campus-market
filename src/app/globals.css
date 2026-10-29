@@ -748,3 +748,121 @@ input, select, textarea {
 .modal .modal-actions .btn {
   flex: 1;
 }
+
+/* ============================================================
+   管理后台样式
+   ============================================================ */
+.page-title {
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* 标签页切换 */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+.admin-tab {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.admin-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 500;
+}
+
+/* 数据概览卡片 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-card .stat-value {
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--primary);
+}
+.stat-card .stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* 管理表格 */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.admin-table th {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 12px;
+}
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+
+/* 角色徽章 */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.badge-super {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+.badge-admin {
+  background: #e6f1fb;
+  color: #185fa5;
+}
+.badge-user {
+  background: #f1efe8;
+  color: var(--text-secondary);
+}
+.badge-banned {
+  background: #fcebeb;
+  color: var(--red);
+}
+
+/* 行内操作按钮组 */
+.row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
