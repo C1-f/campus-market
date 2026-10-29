@@ -157,6 +157,22 @@ begin
       false, now(), now(),
       '', '', ''
     );
+  else
+    select id into new_id from auth.users where lower(email) = admin_email;
+  end if;
+
+  -- 补齐 auth.identities 身份记录（没有它无法登录）
+  if not exists (
+    select 1 from auth.identities where user_id = new_id and provider = 'email'
+  ) then
+    insert into auth.identities (
+      id, user_id, provider_id, identity_data,
+      provider, last_sign_in_at, created_at, updated_at
+    ) values (
+      gen_random_uuid(), new_id, new_id::text,
+      jsonb_build_object('sub', new_id::text, 'email', admin_email),
+      'email', now(), now(), now()
+    );
   end if;
 
   update public.profiles

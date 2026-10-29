@@ -14,6 +14,16 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
+  const [role, setRole] = useState<string>('user');
+
+  // 管理员申请状态
+  const [application, setApplication] = useState<{
+    status: 'pending' | 'approved' | 'rejected';
+    reason: string;
+  } | null>(null);
+  const [applyReason, setApplyReason] = useState('');
+  const [applyMsg, setApplyMsg] = useState('');
+  const [applying, setApplying] = useState(false);
 
   const [myItems, setMyItems] = useState<Item[]>([]);
   const [favorites, setFavorites] = useState<Item[]>([]);
@@ -28,11 +38,24 @@ export default function ProfilePage() {
       setUserId(user.id);
       const { data: profile } = await supabase
         .from('profiles')
-        .select('nickname, email')
+        .select('nickname, email, role')
         .eq('id', user.id)
         .single();
       setNickname(profile?.nickname ?? '');
       setEmail(profile?.email ?? user.email ?? '');
+      setRole(profile?.role ?? 'user');
+
+      // 普通用户加载自己的管理员申请状态
+      if ((profile?.role ?? 'user') === 'user') {
+        const res = await fetch('/api/admin/applications');
+        if (res.ok) {
+          const json = await res.json();
+          const apps = json.applications ?? [];
+          if (apps.length > 0) {
+            setApplication({ status: apps[0].status, reason: apps[0].reason });
+          }
+        }
+      }
     });
   }, []);
 
@@ -129,6 +152,29 @@ export default function ProfilePage() {
     await loadReservations();
   }
 
+  async function submitApplication() {
+    setApplyMsg('');
+    setApplying(true);
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: applyReason }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setApplyMsg(json.error || '提交失败');
+        return;
+      }
+      setApplication({ status: 'pending', reason: applyReason.trim() });
+      setApplyReason('');
+    } catch {
+      setApplyMsg('网络异常，请重试');
+    } finally {
+      setApplying(false);
+    }
+  }
+
   function statusOf(item: Item): string {
     if (item.status === 'available' && new Date(item.expires_at) <= new Date()) {
       return 'expired';
@@ -144,12 +190,67 @@ export default function ProfilePage() {
         </div>
         <div className="info">
           <h1>{nickname || '加载中…'}</h1>
-          <p>{email} · 本校认证用户</p>
+          <p>
+            {email} ·{' '}
+            {role === 'super_admin' ? (
+              <span className="badge badge-super">超级管理员</span>
+            ) : role === 'admin' ? (
+              <span className="badge badge-admin">管理员</span>
+            ) : (
+              '本校认证用户'
+            )}
+          </p>
         </div>
         <Link href="/publish" className="btn btn-primary" style={{ marginLeft: 'auto' }}>
           + 发布闲置
         </Link>
       </div>
+
+      {/* 管理员申请入口：仅普通用户可见 */}
+      {role === 'user' && (
+        <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 500, marginBottom: 8 }}>申请成为管理员</h3>
+          {application?.status === 'pending' ? (
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              你的申请正在等待超级管理员审批，请耐心等待。
+              {application.reason && (
+                <span style={{ display: 'block', marginTop: 6 }}>
+                  申请理由：{application.reason}
+                </span>
+              )}
+            </p>
+          ) : (
+            <>
+              {application?.status === 'rejected' && (
+                <p style={{ fontSize: 13, color: 'var(--red)', marginBottom: 8 }}>
+                  上次的申请未通过，你可以修改理由后重新提交。
+                </p>
+              )}
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 10 }}>
+                管理员可以协助维护集市秩序（下架违规商品、处理违规用户），由超级管理员审批。
+              </p>
+              <div className="field" style={{ marginBottom: 10 }}>
+                <textarea
+                  rows={3}
+                  placeholder="请填写申请理由（至少 5 个字），例如：我是学生会生活部成员，希望协助维护二手集市秩序"
+                  value={applyReason}
+                  onChange={(e) => setApplyReason(e.target.value)}
+                />
+              </div>
+              {applyMsg && (
+                <p style={{ fontSize: 13, color: 'var(--red)', marginBottom: 8 }}>{applyMsg}</p>
+              )}
+              <button
+                className="btn btn-primary btn-sm"
+                disabled={applying}
+                onClick={submitApplication}
+              >
+                {applying ? '提交中…' : '提交申请'}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="tabs">
         <button className={tab === 'items' ? 'active' : ''} onClick={() => setTab('items')}>
