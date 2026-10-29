@@ -4,6 +4,7 @@ import {
   SESSION_COOKIE,
   HEARTBEAT_COOKIE,
   HEARTBEAT_INTERVAL_MS,
+  toSessionCookieOptions,
 } from '@/lib/session';
 
 // 刷新会话 cookie + 保护需要登录的页面
@@ -21,8 +22,9 @@ export async function middleware(request: NextRequest) {
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
+          // 会话级 cookie：关闭浏览器即失效（"退出网页自动退出"）
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, toSessionCookieOptions(options))
           );
         },
       },
@@ -87,11 +89,11 @@ export async function middleware(request: NextRequest) {
       });
 
       if (!mySid) {
+        // 会话级 cookie：随浏览器关闭自动失效
         response.cookies.set(SESSION_COOKIE, sid, {
           path: '/',
           httpOnly: true,
           sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 30,
         });
       }
 

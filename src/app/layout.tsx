@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
+import SessionHeartbeat from '@/components/SessionHeartbeat';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN">
       <body>
         <Navbar />
+        <SessionHeartbeat />
         <main className="container">{children}</main>
       </body>
     </html>
